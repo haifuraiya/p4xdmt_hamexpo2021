@@ -1,0 +1,3 @@
+[submodule "dvb_fpga"]
+	path = dvb_fpga
+	url = git@github.com:phase4ground/dvb_fpga.git
