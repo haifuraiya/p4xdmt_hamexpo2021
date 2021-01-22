@@ -27,7 +27,13 @@ This branch contains the DMT transmit test and demonstation system. The system o
 
 #### Test Setup
 
-- [ ] Configure commercial DVB-S2X demodulator for verification
+- [ ] ORI West Lab PC parts ordered
+- [ ] ORI West Lab PC parts received
+- [ ] ORI West Lab PC built
+- [ ] ORI West Lab PC shipped
+- [ ] DVB-S2X commercial gear recognized in ORI West Lab PC
+- [ ] DVB-S2X commercial gear tested in ORI West Lab PC
+- [ ] Configure commercial DVB-S2X demodulator for demo verification
 
 #### Miscellaneous 
 - [x] Add `phase4ground/dvb_fpga` as Git submodule
