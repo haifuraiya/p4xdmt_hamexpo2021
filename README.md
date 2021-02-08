@@ -27,8 +27,8 @@ This branch contains the DMT transmit test and demonstation system. The system o
 
 #### Test Setup
 
-- [ ] All ORI West Lab PC parts ordered
-- [ ] All ORI West Lab PC parts received
+- [x] All ORI West Lab PC parts ordered
+- [x] All ORI West Lab PC parts received
 - [ ] ORI West Lab PC built
 - [ ] ORI West Lab PC shipped
 - [ ] DVB-S2X commercial gear recognized in ORI West Lab PC
