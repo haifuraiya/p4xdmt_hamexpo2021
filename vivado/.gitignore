@@ -6,6 +6,9 @@
 ##  License    : MIT                                                                   ##
 #########################################################################################
 
+## Vivado Project Files - Should be generated using Makefile
+project_files/
+
 ## log files
 *.log
 *.jou
