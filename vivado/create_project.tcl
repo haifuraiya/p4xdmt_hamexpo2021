@@ -11,6 +11,8 @@ set lib_dirs ../library
 set_property ip_repo_paths $lib_dirs [current_fileset]
 update_ip_catalog
 
+# add constraints
+add_files system_constr.xdc
 
 # add some library files to the project
 add_files ../library/util_cdc
@@ -20,3 +22,9 @@ add_files ../library/common
 source system_bd.tcl
 save_bd_design
 validate_bd_design
+
+# create the wrapper
+make_wrapper -files [get_files project_files/hamexpo2021.srcs/sources_1/bd/system/system.bd] -top
+add_files -norecurse project_files/hamexpo2021.gen/sources_1/bd/system/hdl/system_wrapper.v
+set_property top system_wrapper [current_fileset]
+
