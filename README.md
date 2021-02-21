@@ -8,9 +8,9 @@ This branch contains the DMT transmit test and demonstation system. The system o
 
 #### Transmitter
 
-- [ ] PL Scrambler
-- [ ] PL signaling/pilot insertion
-- [ ] Dummy frame insertion
+- [x] PL Scrambler
+- [x] PL signaling/pilot insertion
+- [x] Dummy frame insertion
 - [ ] Integrate code from BB filter/quadrature modulation and from DVB FPGA
 
 #### Demo Setup
