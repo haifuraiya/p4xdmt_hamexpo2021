@@ -12,5 +12,11 @@ ssh -f -N -L 2100:127.0.0.1:2100 -L 2101:127.0.0.1:2101 $1@204.238.213.107
 export XILINXD_LICENSE_FILE=2100@127.0.0.1
 
 # start vivado
-source /tools/Xilinx/Vivado/2020.2/settings64.sh
-/tools/Xilinx/Vivado/2020.2/bin/vivado
+while true; do
+    read -p "Do you want to start Vivado?" yn
+    case $yn in
+        [Yy]* ) source $VIVADO/settings64.sh; $VIVADO/bin/vivado; break;;
+        [Nn]* ) exit;;
+        * ) echo "Please answer yes or no.";;
+    esac
+done
