@@ -26,5 +26,8 @@ validate_bd_design
 # create the wrapper
 make_wrapper -files [get_files project_files/hamexpo2021.srcs/sources_1/bd/system/system.bd] -top
 add_files -norecurse project_files/hamexpo2021.gen/sources_1/bd/system/hdl/system_wrapper.v
-set_property top system_wrapper [current_fileset]
+
+# add the top level
+add_files system_top.v
+set_property top system_top [current_fileset]
 
