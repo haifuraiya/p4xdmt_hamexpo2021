@@ -1,6 +1,5 @@
 
 # ad9371
-
 set_property  -dict {PACKAGE_PIN  AD10} [get_ports ref_clk0_p]                                        ; ## D04  FMC_HPC_GBTCLK0_M2C_P (NC)
 set_property  -dict {PACKAGE_PIN  AD9 } [get_ports ref_clk0_n]                                        ; ## D05  FMC_HPC_GBTCLK0_M2C_N (NC)
 set_property  -dict {PACKAGE_PIN  AA8 } [get_ports ref_clk1_p]                                        ; ## B20  FMC_HPC_GBTCLK1_M2C_P
@@ -67,10 +66,35 @@ set_property  -dict {PACKAGE_PIN  AF24  IOSTANDARD LVCMOS25} [get_ports ad9371_g
 set_property  -dict {PACKAGE_PIN  AH24  IOSTANDARD LVCMOS25} [get_ports ad9371_gpio_18]               ; ## D12  FMC_HPC_LA05_N
 
 # clocks
-
 create_clock -name tx_ref_clk     -period  8.00 [get_ports ref_clk0_p]
 create_clock -name rx_ref_clk     -period  8.00 [get_ports ref_clk1_p]
 create_clock -name tx_div_clk     -period  8.00 [get_pins system_wrapper/system_i/util_ad9371_xcvr/inst/i_xch_0/i_gtxe2_channel/TXOUTCLK]
 create_clock -name rx_div_clk     -period  8.00 [get_pins system_wrapper/system_i/util_ad9371_xcvr/inst/i_xch_0/i_gtxe2_channel/RXOUTCLK]
 create_clock -name rx_os_div_clk  -period  8.00 [get_pins system_wrapper/system_i/util_ad9371_xcvr/inst/i_xch_2/i_gtxe2_channel/RXOUTCLK]
 
+# iic
+set_property  -dict {PACKAGE_PIN  AJ14  IOSTANDARD LVCMOS25 PULLTYPE PULLUP} [get_ports iic_scl]
+set_property  -dict {PACKAGE_PIN  AJ18  IOSTANDARD LVCMOS25 PULLTYPE PULLUP} [get_ports iic_sda]
+
+# gpio (switches, leds and such)
+set_property  -dict {PACKAGE_PIN  AB17  IOSTANDARD LVCMOS25} [get_ports gpio_bd[0]]           ; ## GPIO_DIP_SW0
+set_property  -dict {PACKAGE_PIN  AC16  IOSTANDARD LVCMOS25} [get_ports gpio_bd[1]]           ; ## GPIO_DIP_SW1
+set_property  -dict {PACKAGE_PIN  AC17  IOSTANDARD LVCMOS25} [get_ports gpio_bd[2]]           ; ## GPIO_DIP_SW2
+set_property  -dict {PACKAGE_PIN  AJ13  IOSTANDARD LVCMOS25} [get_ports gpio_bd[3]]           ; ## GPIO_DIP_SW3
+set_property  -dict {PACKAGE_PIN  AK25  IOSTANDARD LVCMOS25} [get_ports gpio_bd[4]]           ; ## GPIO_SW_LEFT
+set_property  -dict {PACKAGE_PIN  K15   IOSTANDARD LVCMOS15} [get_ports gpio_bd[5]]           ; ## GPIO_SW_CENTER
+set_property  -dict {PACKAGE_PIN  R27   IOSTANDARD LVCMOS25} [get_ports gpio_bd[6]]           ; ## GPIO_SW_RIGHT
+
+set_property  -dict {PACKAGE_PIN  Y21   IOSTANDARD LVCMOS25} [get_ports gpio_bd[7]]           ; ## GPIO_LED_LEFT
+set_property  -dict {PACKAGE_PIN  G2    IOSTANDARD LVCMOS15} [get_ports gpio_bd[8]]           ; ## GPIO_LED_CENTER
+set_property  -dict {PACKAGE_PIN  W21   IOSTANDARD LVCMOS25} [get_ports gpio_bd[9]]           ; ## GPIO_LED_RIGHT
+set_property  -dict {PACKAGE_PIN  A17   IOSTANDARD LVCMOS15} [get_ports gpio_bd[10]]          ; ## GPIO_LED_0
+
+set_property  -dict {PACKAGE_PIN  H14   IOSTANDARD LVCMOS15} [get_ports gpio_bd[11]]          ; ## XADC_GPIO_0
+set_property  -dict {PACKAGE_PIN  J15   IOSTANDARD LVCMOS15} [get_ports gpio_bd[12]]          ; ## XADC_GPIO_1
+set_property  -dict {PACKAGE_PIN  J16   IOSTANDARD LVCMOS15} [get_ports gpio_bd[13]]          ; ## XADC_GPIO_2
+set_property  -dict {PACKAGE_PIN  J14   IOSTANDARD LVCMOS15} [get_ports gpio_bd[14]]          ; ## XADC_GPIO_3
+
+# Define SPI clock
+create_clock -name spi0_clk      -period 40   [get_pins -hier */EMIOSPI0SCLKO]
+create_clock -name spi1_clk      -period 40   [get_pins -hier */EMIOSPI1SCLKO]
