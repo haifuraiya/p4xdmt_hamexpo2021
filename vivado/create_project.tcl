@@ -18,6 +18,14 @@ add_files system_constr.xdc
 add_files ../library/util_cdc
 add_files ../library/common
 
+read_vhdl -vhdl2008 [ glob ../dvb_fpga/rtl/bch_generated/*.vhd ]
+read_vhdl -vhdl2008 [ glob ../dvb_fpga/rtl/ldpc/*.vhd ]
+read_vhdl -vhdl2008 [ glob ../dvb_fpga/rtl/*.vhd ]
+read_vhdl -library str_format [ glob ../dvb_fpga/third_party/hdl_string_format/src/str_format_pkg.vhd ]
+read_vhdl -library fpga_cores [ glob ../dvb_fpga/third_party/fpga_cores/src/*.vhd ]
+read_verilog -sv [ glob ../dvb_fpga/third_party/polyphase_filter/*.v ]
+read_vhdl [ glob ../rtl/*.vhd ]
+
 # create the block level design
 source system_bd.tcl
 save_bd_design
