@@ -18,6 +18,7 @@ add_files system_constr.xdc
 add_files ../library/util_cdc
 add_files ../library/common
 
+# add the DVB transmitter sources to the project
 read_vhdl -vhdl2008 [ glob ../dvb_fpga/rtl/bch_generated/*.vhd ]
 read_vhdl -vhdl2008 [ glob ../dvb_fpga/rtl/ldpc/*.vhd ]
 read_vhdl -vhdl2008 [ glob ../dvb_fpga/rtl/*.vhd ]
@@ -38,4 +39,3 @@ add_files -norecurse project_files/hamexpo2021.gen/sources_1/bd/system/hdl/syste
 # add the top level
 add_files system_top.v
 set_property top system_top [current_fileset]
-

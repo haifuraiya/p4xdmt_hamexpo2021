@@ -18,8 +18,8 @@ entity dvbs2_tx_wrapper is
   port (
     -- AXI4 lite
     --Clock and Reset
-    s_axi_aclk            : in std_logic;
-    s_axi_aresetn         : in std_logic;
+    s_axi_aclk             : in  std_logic;
+    s_axi_aresetn          : in  std_logic;
     --write address channel
     s_axi_awvalid          : in  std_logic;
     s_axi_awready          : out std_logic;
@@ -45,23 +45,40 @@ entity dvbs2_tx_wrapper is
     s_axi_bready           : in  std_logic;
     s_axi_bresp            : out std_logic_vector(1 downto 0);
 
-    coefficients_in_tready : out std_logic;
-    coefficients_in_tdata  : in  std_logic_vector(AXIS_DATA_WIDTH - 1 downto 0);
-    coefficients_in_tlast  : in  std_logic;
-    coefficients_in_tvalid : in  std_logic;
+    coeffs_axi_aclk        : in  std_logic;
+    coeffs_axi_aresetn     : in  std_logic;
+    coeffs_axi_awvalid     : in  std_logic;
+    coeffs_axi_awready     : out std_logic;
+    coeffs_axi_awaddr      : in  std_logic_vector(31 downto 0);
+    coeffs_axi_awprot      : in  std_logic_vector(2 downto 0);
+    coeffs_axi_wvalid      : in  std_logic;
+    coeffs_axi_wready      : out std_logic;
+    coeffs_axi_wdata       : in  std_logic_vector(31 downto 0);
+    coeffs_axi_wstrb       : in  std_logic_vector(3 downto 0);
+    coeffs_axi_bvalid      : out std_logic;
+    coeffs_axi_bready      : in  std_logic;
+    coeffs_axi_bresp       : out std_logic_vector(1 downto 0);
+    coeffs_axi_arvalid     : in  std_logic;
+    coeffs_axi_arready     : out std_logic;
+    coeffs_axi_araddr      : in  std_logic_vector(31 downto 0);
+    coeffs_axi_arprot      : in  std_logic_vector(2 downto 0);
+    coeffs_axi_rvalid      : out std_logic;
+    coeffs_axi_rready      : in  std_logic;
+    coeffs_axi_rdata       : out std_logic_vector(31 downto 0);
+    coeffs_axi_rresp       : out std_logic_vector(1 downto 0);
     -- Input data
-    s_axis_tvalid          : in   std_logic;
-    s_axis_tlast           : in   std_logic;
-    s_axis_tready          : out  std_logic;
-    s_axis_tdata           : in   std_logic_vector(AXIS_DATA_WIDTH - 1 downto 0);
-    s_axis_tid             : in   std_logic_vector(8 downto 0);
-    s_axis_tkeep           : in   std_logic_vector(AXIS_DATA_WIDTH/8 - 1 downto 0);
+    s_axis_tvalid          : in  std_logic;
+    s_axis_tlast           : in  std_logic;
+    s_axis_tready          : out std_logic;
+    s_axis_tdata           : in  std_logic_vector(31 downto 0);
+    s_axis_tid             : in  std_logic_vector(8 downto 0);
+    s_axis_tkeep           : in  std_logic_vector(3 downto 0);
     -- Output data
-    m_axis_tvalid          : out  std_logic;
-    m_axis_tlast           : out  std_logic;
-    m_axis_tready          : in   std_logic;
-    m_axis_tdata           : out  std_logic_vector(AXIS_DATA_WIDTH  - 1 downto 0);
-    m_axis_tkeep           : out  std_logic_vector(AXIS_DATA_WIDTH/8 - 1 downto 0) := (others => '1'));
+    m_axis_tvalid          : out std_logic;
+    m_axis_tlast           : out std_logic;
+    m_axis_tready          : in  std_logic;
+    m_axis_tdata           : out std_logic_vector(31 downto 0);
+    m_axis_tkeep           : out std_logic_vector(3 downto 0) := (others => '1'));
 end dvbs2_tx_wrapper;
 
 architecture rtl of dvbs2_tx_wrapper is
@@ -86,6 +103,29 @@ architecture rtl of dvbs2_tx_wrapper is
   ATTRIBUTE X_INTERFACE_INFO of s_axi_wready  : SIGNAL is "xilinx.com:interface:aximm:1.0 s_axi_lite WREADY";
   ATTRIBUTE X_INTERFACE_INFO of s_axi_wstrb   : SIGNAL is "xilinx.com:interface:aximm:1.0 s_axi_lite WSTRB";
   ATTRIBUTE X_INTERFACE_INFO of s_axi_wvalid  : SIGNAL is "xilinx.com:interface:aximm:1.0 s_axi_lite WVALID";
+
+
+  ATTRIBUTE X_INTERFACE_INFO of coeffs_axi_aclk    : SIGNAL is "xilinx.com:interface:aximm:1.0 coeffs_axi_lite ACLK";
+  ATTRIBUTE X_INTERFACE_INFO of coeffs_axi_aresetn : SIGNAL is "xilinx.com:interface:aximm:1.0 coeffs_axi_lite ARESETN";
+  ATTRIBUTE X_INTERFACE_INFO of coeffs_axi_araddr  : SIGNAL is "xilinx.com:interface:aximm:1.0 coeffs_axi_lite ARADDR";
+  ATTRIBUTE X_INTERFACE_INFO of coeffs_axi_arprot  : SIGNAL is "xilinx.com:interface:aximm:1.0 coeffs_axi_lite ARPROT";
+  ATTRIBUTE X_INTERFACE_INFO of coeffs_axi_arready : SIGNAL is "xilinx.com:interface:aximm:1.0 coeffs_axi_lite ARREADY";
+  ATTRIBUTE X_INTERFACE_INFO of coeffs_axi_arvalid : SIGNAL is "xilinx.com:interface:aximm:1.0 coeffs_axi_lite ARVALID";
+  ATTRIBUTE X_INTERFACE_INFO of coeffs_axi_awaddr  : SIGNAL is "xilinx.com:interface:aximm:1.0 coeffs_axi_lite AWADDR";
+  ATTRIBUTE X_INTERFACE_INFO of coeffs_axi_awprot  : SIGNAL is "xilinx.com:interface:aximm:1.0 coeffs_axi_lite AWPROT";
+  ATTRIBUTE X_INTERFACE_INFO of coeffs_axi_awready : SIGNAL is "xilinx.com:interface:aximm:1.0 coeffs_axi_lite AWREADY";
+  ATTRIBUTE X_INTERFACE_INFO of coeffs_axi_awvalid : SIGNAL is "xilinx.com:interface:aximm:1.0 coeffs_axi_lite AWVALID";
+  ATTRIBUTE X_INTERFACE_INFO of coeffs_axi_bready  : SIGNAL is "xilinx.com:interface:aximm:1.0 coeffs_axi_lite BREADY";
+  ATTRIBUTE X_INTERFACE_INFO of coeffs_axi_bresp   : SIGNAL is "xilinx.com:interface:aximm:1.0 coeffs_axi_lite BRESP";
+  ATTRIBUTE X_INTERFACE_INFO of coeffs_axi_bvalid  : SIGNAL is "xilinx.com:interface:aximm:1.0 coeffs_axi_lite BVALID";
+  ATTRIBUTE X_INTERFACE_INFO of coeffs_axi_rdata   : SIGNAL is "xilinx.com:interface:aximm:1.0 coeffs_axi_lite RDATA";
+  ATTRIBUTE X_INTERFACE_INFO of coeffs_axi_rready  : SIGNAL is "xilinx.com:interface:aximm:1.0 coeffs_axi_lite RREADY";
+  ATTRIBUTE X_INTERFACE_INFO of coeffs_axi_rresp   : SIGNAL is "xilinx.com:interface:aximm:1.0 coeffs_axi_lite RRESP";
+  ATTRIBUTE X_INTERFACE_INFO of coeffs_axi_rvalid  : SIGNAL is "xilinx.com:interface:aximm:1.0 coeffs_axi_lite RVALID";
+  ATTRIBUTE X_INTERFACE_INFO of coeffs_axi_wdata   : SIGNAL is "xilinx.com:interface:aximm:1.0 coeffs_axi_lite WDATA";
+  ATTRIBUTE X_INTERFACE_INFO of coeffs_axi_wready  : SIGNAL is "xilinx.com:interface:aximm:1.0 coeffs_axi_lite WREADY";
+  ATTRIBUTE X_INTERFACE_INFO of coeffs_axi_wstrb   : SIGNAL is "xilinx.com:interface:aximm:1.0 coeffs_axi_lite WSTRB";
+  ATTRIBUTE X_INTERFACE_INFO of coeffs_axi_wvalid  : SIGNAL is "xilinx.com:interface:aximm:1.0 coeffs_axi_lite WVALID";
 
   signal rst       : std_logic;
 
@@ -157,10 +197,27 @@ begin
       bit_mapper_ram_wdata    => regs2user.bit_mapper_ram_wdata,
       bit_mapper_ram_rdata    => user2regs.bit_mapper_ram_rdata,
       -- Polyphase filter coefficients interface
-      coefficients_in_tready  => coefficients_in_tready,
-      coefficients_in_tdata   => coefficients_in_tdata,
-      coefficients_in_tlast   => coefficients_in_tlast,
-      coefficients_in_tvalid  => coefficients_in_tvalid,
+      coeffs_axi_aclk         => coeffs_axi_aclk,
+      coeffs_axi_aresetn      => coeffs_axi_aresetn,
+      coeffs_axi_awvalid      => coeffs_axi_awvalid,
+      coeffs_axi_awready      => coeffs_axi_awready,
+      coeffs_axi_awaddr       => coeffs_axi_awaddr,
+      coeffs_axi_awprot       => coeffs_axi_awprot,
+      coeffs_axi_wvalid       => coeffs_axi_wvalid,
+      coeffs_axi_wready       => coeffs_axi_wready,
+      coeffs_axi_wdata        => coeffs_axi_wdata,
+      coeffs_axi_wstrb        => coeffs_axi_wstrb,
+      coeffs_axi_bvalid       => coeffs_axi_bvalid,
+      coeffs_axi_bready       => coeffs_axi_bready,
+      coeffs_axi_bresp        => coeffs_axi_bresp,
+      coeffs_axi_arvalid      => coeffs_axi_arvalid,
+      coeffs_axi_arready      => coeffs_axi_arready,
+      coeffs_axi_araddr       => coeffs_axi_araddr,
+      coeffs_axi_arprot       => coeffs_axi_arprot,
+      coeffs_axi_rvalid       => coeffs_axi_rvalid,
+      coeffs_axi_rready       => coeffs_axi_rready,
+      coeffs_axi_rdata        => coeffs_axi_rdata,
+      coeffs_axi_rresp        => coeffs_axi_rresp,
       -- Per frame config input
       cfg_constellation       => s_axis_tid(2 downto 0),
       cfg_frame_type          => s_axis_tid(4 downto 3),
