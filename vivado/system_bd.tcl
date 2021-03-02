@@ -40,7 +40,7 @@ if { [string first $scripts_vivado_version $current_vivado_version] == -1 } {
 
 # The design that will be created by this Tcl script contains the following 
 # module references:
-# sync_bits, ad_bus_mux, ad_bus_mux, ad_bus_mux, ad_bus_mux, sync_bits, dvbs2_tx_wrapper, ad_bus_mux, ad_bus_mux, util_pulse_gen
+# sync_bits, ad_bus_mux, ad_bus_mux, ad_bus_mux, ad_bus_mux, sync_bits, dvbs2_tx_wrapper, util_pulse_gen
 
 # Please add the sources of those modules before sourcing this Tcl script.
 
@@ -137,6 +137,7 @@ analog.com:user:axi_dacfifo:1.0\
 analog.com:user:axi_clkgen:1.0\
 analog.com:user:axi_dmac:1.0\
 analog.com:user:axi_adxcvr:1.0\
+xilinx.com:ip:axi_fifo_mm_s:4.2\
 xilinx.com:ip:smartconnect:1.0\
 xilinx.com:ip:axi_iic:2.0\
 analog.com:user:axi_sysid:1.0\
@@ -144,7 +145,6 @@ analog.com:user:sysid_rom:1.0\
 xilinx.com:ip:xlconcat:2.1\
 xilinx.com:ip:processing_system7:5.5\
 analog.com:user:util_cpack2:1.0\
-analog.com:user:util_upack2:1.0\
 analog.com:user:util_adxcvr:1.0\
 analog.com:user:jesd204_rx:1.0\
 analog.com:user:axi_jesd204_rx:1.0\
@@ -154,7 +154,7 @@ analog.com:user:ad_ip_jesd204_tpl_adc:1.0\
 xilinx.com:ip:xlslice:1.0\
 xilinx.com:ip:fir_compiler:7.2\
 analog.com:user:ad_ip_jesd204_tpl_dac:1.0\
-xilinx.com:ip:axis_subset_converter:1.1\
+xilinx.com:ip:axis_broadcaster:1.1\
 xilinx.com:ip:util_vector_logic:2.0\
 "
 
@@ -188,8 +188,6 @@ ad_bus_mux\
 ad_bus_mux\
 sync_bits\
 dvbs2_tx_wrapper\
-ad_bus_mux\
-ad_bus_mux\
 util_pulse_gen\
 "
 
@@ -219,13 +217,13 @@ if { $bCheckIPsPassed != 1 } {
 ##################################################################
 
 
-# Hierarchical cell: tx_fir_interpolator
-proc create_hier_cell_tx_fir_interpolator { parentCell nameHier } {
+# Hierarchical cell: tx_dvb
+proc create_hier_cell_tx_dvb { parentCell nameHier } {
 
   variable script_folder
 
   if { $parentCell eq "" || $nameHier eq "" } {
-     catch {common::send_gid_msg -ssname BD::TCL -id 2092 -severity "ERROR" "create_hier_cell_tx_fir_interpolator() - Empty argument(s)!"}
+     catch {common::send_gid_msg -ssname BD::TCL -id 2092 -severity "ERROR" "create_hier_cell_tx_dvb() - Empty argument(s)!"}
      return
   }
 
@@ -264,49 +262,24 @@ proc create_hier_cell_tx_fir_interpolator { parentCell nameHier } {
   # Create pins
   create_bd_pin -dir I aclk
   create_bd_pin -dir I active
-  create_bd_pin -dir I dac_enable_0
-  create_bd_pin -dir I dac_enable_1
-  create_bd_pin -dir I dac_enable_2
-  create_bd_pin -dir I dac_enable_3
-  create_bd_pin -dir I dac_valid_0
-  create_bd_pin -dir I dac_valid_1
-  create_bd_pin -dir I dac_valid_2
-  create_bd_pin -dir I dac_valid_3
-  create_bd_pin -dir I -from 31 -to 0 data_in_0
-  create_bd_pin -dir I -from 31 -to 0 data_in_1
-  create_bd_pin -dir I -from 31 -to 0 data_in_2
-  create_bd_pin -dir I -from 31 -to 0 data_in_3
   create_bd_pin -dir O -from 31 -to 0 data_out_0
   create_bd_pin -dir O -from 31 -to 0 data_out_1
-  create_bd_pin -dir O -from 31 -to 0 data_out_2
-  create_bd_pin -dir O -from 31 -to 0 data_out_3
-  create_bd_pin -dir O enable_out_0
-  create_bd_pin -dir O enable_out_1
-  create_bd_pin -dir O -from 0 -to 0 enable_out_2
-  create_bd_pin -dir O -from 0 -to 0 enable_out_3
   create_bd_pin -dir I load_config
   create_bd_pin -dir I -type rst out_resetn
   create_bd_pin -dir I -from 31 -to 0 pulse_width
+  create_bd_pin -dir I s_axis_aclk
+  create_bd_pin -dir I s_axis_aresetn
   create_bd_pin -dir O valid_out_0
   create_bd_pin -dir O valid_out_1
-  create_bd_pin -dir O -from 0 -to 0 valid_out_2
-  create_bd_pin -dir O -from 0 -to 0 valid_out_3
 
-  # Create instance: axis_subset_converter_0, and set properties
-  set axis_subset_converter_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:axis_subset_converter:1.1 axis_subset_converter_0 ]
+  # Create instance: axis_broadcaster_0, and set properties
+  set axis_broadcaster_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:axis_broadcaster:1.1 axis_broadcaster_0 ]
   set_property -dict [ list \
+   CONFIG.M00_TDATA_REMAP {tdata[15:0]} \
+   CONFIG.M01_TDATA_REMAP {tdata[31:16]} \
    CONFIG.M_TDATA_NUM_BYTES {2} \
    CONFIG.S_TDATA_NUM_BYTES {4} \
-   CONFIG.TDATA_REMAP {tdata[15:0]} \
- ] $axis_subset_converter_0
-
-  # Create instance: axis_subset_converter_1, and set properties
-  set axis_subset_converter_1 [ create_bd_cell -type ip -vlnv xilinx.com:ip:axis_subset_converter:1.1 axis_subset_converter_1 ]
-  set_property -dict [ list \
-   CONFIG.M_TDATA_NUM_BYTES {2} \
-   CONFIG.S_TDATA_NUM_BYTES {4} \
-   CONFIG.TDATA_REMAP {tdata[31:16]} \
- ] $axis_subset_converter_1
+ ] $axis_broadcaster_0
 
   # Create instance: cdc_sync_active, and set properties
   set block_name sync_bits
@@ -384,70 +357,6 @@ proc create_hier_cell_tx_fir_interpolator { parentCell nameHier } {
    CONFIG.Zero_Pack_Factor {1} \
  ] $fir_interpolation_1
 
-  # Create instance: logic_and_0, and set properties
-  set logic_and_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:util_vector_logic:2.0 logic_and_0 ]
-  set_property -dict [ list \
-   CONFIG.C_SIZE {1} \
- ] $logic_and_0
-
-  # Create instance: logic_and_1, and set properties
-  set logic_and_1 [ create_bd_cell -type ip -vlnv xilinx.com:ip:util_vector_logic:2.0 logic_and_1 ]
-  set_property -dict [ list \
-   CONFIG.C_SIZE {1} \
- ] $logic_and_1
-
-  # Create instance: logic_and_2, and set properties
-  set logic_and_2 [ create_bd_cell -type ip -vlnv xilinx.com:ip:util_vector_logic:2.0 logic_and_2 ]
-  set_property -dict [ list \
-   CONFIG.C_SIZE {1} \
- ] $logic_and_2
-
-  # Create instance: logic_and_3, and set properties
-  set logic_and_3 [ create_bd_cell -type ip -vlnv xilinx.com:ip:util_vector_logic:2.0 logic_and_3 ]
-  set_property -dict [ list \
-   CONFIG.C_SIZE {1} \
- ] $logic_and_3
-
-  # Create instance: logic_and_4, and set properties
-  set logic_and_4 [ create_bd_cell -type ip -vlnv xilinx.com:ip:util_vector_logic:2.0 logic_and_4 ]
-  set_property -dict [ list \
-   CONFIG.C_SIZE {1} \
- ] $logic_and_4
-
-  # Create instance: logic_and_5, and set properties
-  set logic_and_5 [ create_bd_cell -type ip -vlnv xilinx.com:ip:util_vector_logic:2.0 logic_and_5 ]
-  set_property -dict [ list \
-   CONFIG.C_SIZE {1} \
- ] $logic_and_5
-
-  # Create instance: out_mux_0, and set properties
-  set block_name ad_bus_mux
-  set block_cell_name out_mux_0
-  if { [catch {set out_mux_0 [create_bd_cell -type module -reference $block_name $block_cell_name] } errmsg] } {
-     catch {common::send_gid_msg -ssname BD::TCL -id 2095 -severity "ERROR" "Unable to add referenced block <$block_name>. Please add the files for ${block_name}'s definition into the project."}
-     return 1
-   } elseif { $out_mux_0 eq "" } {
-     catch {common::send_gid_msg -ssname BD::TCL -id 2096 -severity "ERROR" "Unable to referenced block <$block_name>. Please add the files for ${block_name}'s definition into the project."}
-     return 1
-   }
-    set_property -dict [ list \
-   CONFIG.DATA_WIDTH {32} \
- ] $out_mux_0
-
-  # Create instance: out_mux_1, and set properties
-  set block_name ad_bus_mux
-  set block_cell_name out_mux_1
-  if { [catch {set out_mux_1 [create_bd_cell -type module -reference $block_name $block_cell_name] } errmsg] } {
-     catch {common::send_gid_msg -ssname BD::TCL -id 2095 -severity "ERROR" "Unable to add referenced block <$block_name>. Please add the files for ${block_name}'s definition into the project."}
-     return 1
-   } elseif { $out_mux_1 eq "" } {
-     catch {common::send_gid_msg -ssname BD::TCL -id 2096 -severity "ERROR" "Unable to referenced block <$block_name>. Please add the files for ${block_name}'s definition into the project."}
-     return 1
-   }
-    set_property -dict [ list \
-   CONFIG.DATA_WIDTH {32} \
- ] $out_mux_1
-
   # Create instance: rate_gen, and set properties
   set block_name util_pulse_gen
   set block_cell_name rate_gen
@@ -463,64 +372,34 @@ proc create_hier_cell_tx_fir_interpolator { parentCell nameHier } {
    CONFIG.PULSE_WIDTH {1} \
  ] $rate_gen
 
-  # Create instance: xlconstant_0, and set properties
-  set xlconstant_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlconstant:1.1 xlconstant_0 ]
-  set_property -dict [ list \
-   CONFIG.CONST_VAL {0} \
- ] $xlconstant_0
-
-  # Create instance: xlconstant_1, and set properties
-  set xlconstant_1 [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlconstant:1.1 xlconstant_1 ]
-  set_property -dict [ list \
-   CONFIG.CONST_VAL {0} \
-   CONFIG.CONST_WIDTH {32} \
- ] $xlconstant_1
+  # Create instance: util_vector_logic_0, and set properties
+  set util_vector_logic_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:util_vector_logic:2.0 util_vector_logic_0 ]
 
   # Create interface connections
-  connect_bd_intf_net -intf_net axis_subset_converter_0_M_AXIS [get_bd_intf_pins axis_subset_converter_0/M_AXIS] [get_bd_intf_pins fir_interpolation_1/S_AXIS_DATA]
-  connect_bd_intf_net -intf_net axis_subset_converter_1_M_AXIS [get_bd_intf_pins axis_subset_converter_1/M_AXIS] [get_bd_intf_pins fir_interpolation_0/S_AXIS_DATA]
+  connect_bd_intf_net -intf_net axis_broadcaster_0_M00_AXIS [get_bd_intf_pins axis_broadcaster_0/M00_AXIS] [get_bd_intf_pins fir_interpolation_0/S_AXIS_DATA]
+  connect_bd_intf_net -intf_net axis_broadcaster_0_M01_AXIS [get_bd_intf_pins axis_broadcaster_0/M01_AXIS] [get_bd_intf_pins fir_interpolation_1/S_AXIS_DATA]
   connect_bd_intf_net -intf_net coeffs_axi_lite_1 [get_bd_intf_pins coeffs_axi_lite] [get_bd_intf_pins dvbs2_tx_wrapper_0/coeffs_axi_lite]
-  connect_bd_intf_net -intf_net dvbs2_tx_wrapper_0_m_axis [get_bd_intf_pins axis_subset_converter_0/S_AXIS] [get_bd_intf_pins dvbs2_tx_wrapper_0/m_axis]
   connect_bd_intf_net -intf_net s_axi_lite_1_1 [get_bd_intf_pins s_axi_lite_1] [get_bd_intf_pins dvbs2_tx_wrapper_0/s_axi_lite]
   connect_bd_intf_net -intf_net s_axis_1 [get_bd_intf_pins s_axis] [get_bd_intf_pins dvbs2_tx_wrapper_0/s_axis]
 
   # Create port connections
-  connect_bd_net -net aclk_1 [get_bd_pins aclk] [get_bd_pins axis_subset_converter_0/aclk] [get_bd_pins axis_subset_converter_1/aclk] [get_bd_pins cdc_sync_active/out_clk] [get_bd_pins dvbs2_tx_wrapper_0/s_axi_aclk] [get_bd_pins fir_interpolation_0/aclk] [get_bd_pins fir_interpolation_1/aclk] [get_bd_pins rate_gen/clk]
+  connect_bd_net -net aclk_1 [get_bd_pins aclk] [get_bd_pins axis_broadcaster_0/aclk] [get_bd_pins cdc_sync_active/out_clk] [get_bd_pins dvbs2_tx_wrapper_0/coeffs_axi_aclk] [get_bd_pins dvbs2_tx_wrapper_0/s_axi_aclk] [get_bd_pins fir_interpolation_0/aclk] [get_bd_pins fir_interpolation_1/aclk] [get_bd_pins rate_gen/clk]
   connect_bd_net -net active_1 [get_bd_pins active] [get_bd_pins cdc_sync_active/in_bits]
-  connect_bd_net -net axis_subset_converter_0_m_axis_tdata [get_bd_pins axis_subset_converter_0/m_axis_tdata] [get_bd_pins fir_interpolation_1/s_axis_data_tdata]
-  connect_bd_net -net axis_subset_converter_0_m_axis_tvalid [get_bd_pins axis_subset_converter_0/m_axis_tvalid] [get_bd_pins logic_and_2/Op1]
-  connect_bd_net -net axis_subset_converter_1_m_axis_tdata [get_bd_pins axis_subset_converter_1/m_axis_tdata] [get_bd_pins fir_interpolation_0/s_axis_data_tdata]
-  connect_bd_net -net axis_subset_converter_1_m_axis_tvalid [get_bd_pins axis_subset_converter_1/m_axis_tvalid] [get_bd_pins logic_and_3/Op1]
-  connect_bd_net -net axis_subset_converter_1_s_axis_tready [get_bd_pins axis_subset_converter_1/s_axis_tready] [get_bd_pins dvbs2_tx_wrapper_0/m_axis_tready]
-  connect_bd_net -net cdc_sync_active_out_bits [get_bd_pins axis_subset_converter_0/aresetn] [get_bd_pins axis_subset_converter_1/aresetn] [get_bd_pins cdc_sync_active/out_bits] [get_bd_pins dvbs2_tx_wrapper_0/s_axi_aresetn] [get_bd_pins out_mux_0/select_path] [get_bd_pins out_mux_1/select_path] [get_bd_pins rate_gen/rstn]
-  connect_bd_net -net dac_enable_0_1 [get_bd_pins dac_enable_0] [get_bd_pins out_mux_0/enable_in_0] [get_bd_pins out_mux_0/enable_in_1]
-  connect_bd_net -net dac_enable_1_1 [get_bd_pins dac_enable_1] [get_bd_pins out_mux_1/enable_in_0] [get_bd_pins out_mux_1/enable_in_1]
-  connect_bd_net -net dac_valid_0_1 [get_bd_pins dac_valid_0] [get_bd_pins logic_and_0/Op2] [get_bd_pins out_mux_0/valid_in_0]
-  connect_bd_net -net dac_valid_1_1 [get_bd_pins dac_valid_1] [get_bd_pins logic_and_1/Op2] [get_bd_pins out_mux_1/valid_in_0]
-  connect_bd_net -net dvbs2_tx_wrapper_0_m_axis_tdata [get_bd_pins axis_subset_converter_1/s_axis_tdata] [get_bd_pins dvbs2_tx_wrapper_0/m_axis_tdata]
-  connect_bd_net -net dvbs2_tx_wrapper_0_m_axis_tvalid [get_bd_pins axis_subset_converter_1/s_axis_tvalid] [get_bd_pins dvbs2_tx_wrapper_0/m_axis_tvalid]
-  connect_bd_net -net fir_interpolation_0_m_axis_data_tdata [get_bd_pins fir_interpolation_0/m_axis_data_tdata] [get_bd_pins out_mux_0/data_in_1]
-  connect_bd_net -net fir_interpolation_0_s_axis_data_tready [get_bd_pins fir_interpolation_0/s_axis_data_tready] [get_bd_pins logic_and_5/Op1]
-  connect_bd_net -net fir_interpolation_1_m_axis_data_tdata [get_bd_pins fir_interpolation_1/m_axis_data_tdata] [get_bd_pins out_mux_1/data_in_1]
-  connect_bd_net -net fir_interpolation_1_s_axis_data_tready [get_bd_pins fir_interpolation_1/s_axis_data_tready] [get_bd_pins logic_and_4/Op1]
+  connect_bd_net -net axis_broadcaster_0_s_axis_tready [get_bd_pins axis_broadcaster_0/s_axis_tready] [get_bd_pins util_vector_logic_0/Op1]
+  connect_bd_net -net cdc_sync_active_out_bits [get_bd_pins cdc_sync_active/out_bits] [get_bd_pins rate_gen/rstn]
+  connect_bd_net -net dvbs2_tx_wrapper_0_m_axis_tdata [get_bd_pins axis_broadcaster_0/s_axis_tdata] [get_bd_pins dvbs2_tx_wrapper_0/m_axis_tdata]
+  connect_bd_net -net dvbs2_tx_wrapper_0_m_axis_tvalid [get_bd_pins axis_broadcaster_0/s_axis_tvalid] [get_bd_pins dvbs2_tx_wrapper_0/m_axis_tvalid]
+  connect_bd_net -net fir_interpolation_0_m_axis_data_tdata [get_bd_pins data_out_0] [get_bd_pins fir_interpolation_0/m_axis_data_tdata]
+  connect_bd_net -net fir_interpolation_0_m_axis_data_tvalid [get_bd_pins valid_out_0] [get_bd_pins fir_interpolation_0/m_axis_data_tvalid]
+  connect_bd_net -net fir_interpolation_1_m_axis_data_tdata [get_bd_pins data_out_1] [get_bd_pins fir_interpolation_1/m_axis_data_tdata]
+  connect_bd_net -net fir_interpolation_1_m_axis_data_tvalid [get_bd_pins valid_out_1] [get_bd_pins fir_interpolation_1/m_axis_data_tvalid]
   connect_bd_net -net load_config_1 [get_bd_pins load_config] [get_bd_pins rate_gen/load_config]
-  connect_bd_net -net logic_and_0_Res [get_bd_pins logic_and_0/Res] [get_bd_pins logic_and_3/Op2] [get_bd_pins logic_and_5/Op2]
-  connect_bd_net -net logic_and_1_Res [get_bd_pins logic_and_1/Res] [get_bd_pins logic_and_2/Op2] [get_bd_pins logic_and_4/Op2]
-  connect_bd_net -net logic_and_2_Res [get_bd_pins fir_interpolation_1/s_axis_data_tvalid] [get_bd_pins logic_and_2/Res]
-  connect_bd_net -net logic_and_3_Res [get_bd_pins fir_interpolation_0/s_axis_data_tvalid] [get_bd_pins logic_and_3/Res]
-  connect_bd_net -net logic_and_4_Res [get_bd_pins axis_subset_converter_0/m_axis_tready] [get_bd_pins logic_and_4/Res]
-  connect_bd_net -net logic_and_5_Res [get_bd_pins axis_subset_converter_1/m_axis_tready] [get_bd_pins logic_and_5/Res]
-  connect_bd_net -net out_mux_0_data_out [get_bd_pins data_out_0] [get_bd_pins out_mux_0/data_out]
-  connect_bd_net -net out_mux_0_enable_out [get_bd_pins enable_out_0] [get_bd_pins out_mux_0/enable_out]
-  connect_bd_net -net out_mux_0_valid_out [get_bd_pins valid_out_0] [get_bd_pins out_mux_0/valid_out]
-  connect_bd_net -net out_mux_1_data_out [get_bd_pins data_out_1] [get_bd_pins out_mux_1/data_out]
-  connect_bd_net -net out_mux_1_enable_out [get_bd_pins enable_out_1] [get_bd_pins out_mux_1/enable_out]
-  connect_bd_net -net out_mux_1_valid_out [get_bd_pins valid_out_1] [get_bd_pins out_mux_1/valid_out]
-  connect_bd_net -net out_resetn_1 [get_bd_pins out_resetn] [get_bd_pins cdc_sync_active/out_resetn]
+  connect_bd_net -net out_resetn_1 [get_bd_pins out_resetn] [get_bd_pins axis_broadcaster_0/aresetn] [get_bd_pins cdc_sync_active/out_resetn] [get_bd_pins dvbs2_tx_wrapper_0/coeffs_axi_aresetn] [get_bd_pins dvbs2_tx_wrapper_0/s_axi_aresetn]
   connect_bd_net -net pulse_width_1 [get_bd_pins pulse_width] [get_bd_pins rate_gen/pulse_period] [get_bd_pins rate_gen/pulse_width]
-  connect_bd_net -net rate_gen_pulse [get_bd_pins logic_and_0/Op1] [get_bd_pins logic_and_1/Op1] [get_bd_pins out_mux_0/valid_in_1] [get_bd_pins out_mux_1/valid_in_1] [get_bd_pins rate_gen/pulse]
-  connect_bd_net -net xlconstant_0_dout [get_bd_pins enable_out_2] [get_bd_pins enable_out_3] [get_bd_pins valid_out_2] [get_bd_pins valid_out_3] [get_bd_pins xlconstant_0/dout]
-  connect_bd_net -net xlconstant_1_dout [get_bd_pins data_out_2] [get_bd_pins data_out_3] [get_bd_pins xlconstant_1/dout]
+  connect_bd_net -net rate_gen_pulse [get_bd_pins rate_gen/pulse] [get_bd_pins util_vector_logic_0/Op2]
+  connect_bd_net -net s_axis_aclk_1 [get_bd_pins s_axis_aclk] [get_bd_pins dvbs2_tx_wrapper_0/s_axis_aclk]
+  connect_bd_net -net s_axis_aresetn_1 [get_bd_pins s_axis_aresetn] [get_bd_pins dvbs2_tx_wrapper_0/s_axis_aresetn]
+  connect_bd_net -net util_vector_logic_0_Res [get_bd_pins dvbs2_tx_wrapper_0/m_axis_tready] [get_bd_pins util_vector_logic_0/Res]
 
   # Restore current instance
   current_bd_instance $oldCurInst
@@ -1754,9 +1633,15 @@ proc create_root_design { parentCell } {
    CONFIG.AXI_DATA_WIDTH {512} \
    CONFIG.AXI_LENGTH {255} \
    CONFIG.AXI_SIZE {6} \
-   CONFIG.DAC_DATA_WIDTH {128} \
+   CONFIG.DAC_DATA_WIDTH {32} \
    CONFIG.DMA_DATA_WIDTH {128} \
  ] $axi_ad9371_dacfifo
+
+  # Create instance: axi_ad9371_dacfifo_axi_periph, and set properties
+  set axi_ad9371_dacfifo_axi_periph [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_interconnect:2.1 axi_ad9371_dacfifo_axi_periph ]
+  set_property -dict [ list \
+   CONFIG.NUM_MI {1} \
+ ] $axi_ad9371_dacfifo_axi_periph
 
   # Create instance: axi_ad9371_rx_clkgen, and set properties
   set axi_ad9371_rx_clkgen [ create_bd_cell -type ip -vlnv analog.com:user:axi_clkgen:1.0 axi_ad9371_rx_clkgen ]
@@ -1882,6 +1767,12 @@ proc create_root_design { parentCell } {
   set_property -dict [ list \
    CONFIG.NUM_MI {20} \
  ] $axi_cpu_interconnect
+
+  # Create instance: axi_fifo_mm_s, and set properties
+  set axi_fifo_mm_s [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_fifo_mm_s:4.2 axi_fifo_mm_s ]
+  set_property -dict [ list \
+   CONFIG.C_USE_RX_DATA {0} \
+ ] $axi_fifo_mm_s
 
   # Create instance: axi_hp1_interconnect, and set properties
   set axi_hp1_interconnect [ create_bd_cell -type ip -vlnv xilinx.com:ip:smartconnect:1.0 axi_hp1_interconnect ]
@@ -2441,8 +2332,8 @@ proc create_root_design { parentCell } {
   # Create instance: tx_ad9371_tpl_core
   create_hier_cell_tx_ad9371_tpl_core [current_bd_instance .] tx_ad9371_tpl_core
 
-  # Create instance: tx_fir_interpolator
-  create_hier_cell_tx_fir_interpolator [current_bd_instance .] tx_fir_interpolator
+  # Create instance: tx_dvb
+  create_hier_cell_tx_dvb [current_bd_instance .] tx_dvb
 
   # Create instance: util_ad9371_rx_cpack, and set properties
   set util_ad9371_rx_cpack [ create_bd_cell -type ip -vlnv analog.com:user:util_cpack2:1.0 util_ad9371_rx_cpack ]
@@ -2460,14 +2351,6 @@ proc create_root_design { parentCell } {
    CONFIG.SAMPLE_DATA_WIDTH {16} \
  ] $util_ad9371_rx_os_cpack
 
-  # Create instance: util_ad9371_tx_upack, and set properties
-  set util_ad9371_tx_upack [ create_bd_cell -type ip -vlnv analog.com:user:util_upack2:1.0 util_ad9371_tx_upack ]
-  set_property -dict [ list \
-   CONFIG.NUM_OF_CHANNELS {4} \
-   CONFIG.SAMPLES_PER_CHANNEL {2} \
-   CONFIG.SAMPLE_DATA_WIDTH {16} \
- ] $util_ad9371_tx_upack
-
   # Create instance: util_ad9371_xcvr, and set properties
   set util_ad9371_xcvr [ create_bd_cell -type ip -vlnv analog.com:user:util_adxcvr:1.0 util_ad9371_xcvr ]
   set_property -dict [ list \
@@ -2484,6 +2367,8 @@ proc create_root_design { parentCell } {
 
   # Create interface connections
   connect_bd_intf_net -intf_net S00_AXI_1 [get_bd_intf_pins axi_cpu_interconnect/S00_AXI] [get_bd_intf_pins sys_ps7/M_AXI_GP0]
+  connect_bd_intf_net -intf_net axi_ad9371_dacfifo_axi [get_bd_intf_pins axi_ad9371_dacfifo/axi] [get_bd_intf_pins axi_ad9371_dacfifo_axi_periph/S00_AXI]
+  connect_bd_intf_net -intf_net axi_ad9371_dacfifo_axi_periph_M00_AXI [get_bd_intf_pins axi_ad9371_dacfifo_axi_periph/M00_AXI] [get_bd_intf_pins axi_fifo_mm_s/S_AXI]
   connect_bd_intf_net -intf_net axi_ad9371_rx_dma_m_dest_axi [get_bd_intf_pins axi_ad9371_rx_dma/m_dest_axi] [get_bd_intf_pins axi_hp2_interconnect/S00_AXI]
   connect_bd_intf_net -intf_net axi_ad9371_rx_os_dma_m_dest_axi [get_bd_intf_pins axi_ad9371_rx_os_dma/m_dest_axi] [get_bd_intf_pins axi_hp2_interconnect/S01_AXI]
   connect_bd_intf_net -intf_net axi_ad9371_rx_os_xcvr_m_axi [get_bd_intf_pins axi_ad9371_rx_os_xcvr/m_axi] [get_bd_intf_pins axi_hp3_interconnect/S01_AXI]
@@ -2518,17 +2403,18 @@ proc create_root_design { parentCell } {
   connect_bd_intf_net -intf_net axi_cpu_interconnect_M14_AXI [get_bd_intf_pins axi_ad9371_rx_os_xcvr/s_axi] [get_bd_intf_pins axi_cpu_interconnect/M14_AXI]
   connect_bd_intf_net -intf_net axi_cpu_interconnect_M15_AXI [get_bd_intf_pins axi_ad9371_rx_os_clkgen/s_axi] [get_bd_intf_pins axi_cpu_interconnect/M15_AXI]
   connect_bd_intf_net -intf_net axi_cpu_interconnect_M17_AXI [get_bd_intf_pins axi_ad9371_rx_os_dma/s_axi] [get_bd_intf_pins axi_cpu_interconnect/M17_AXI]
-  connect_bd_intf_net -intf_net axi_cpu_interconnect_M18_AXI [get_bd_intf_pins axi_cpu_interconnect/M18_AXI] [get_bd_intf_pins tx_fir_interpolator/s_axi_lite_1]
-  connect_bd_intf_net -intf_net axi_cpu_interconnect_M19_AXI [get_bd_intf_pins axi_cpu_interconnect/M19_AXI] [get_bd_intf_pins tx_fir_interpolator/coeffs_axi_lite]
+  connect_bd_intf_net -intf_net axi_fifo_mm_s_AXI_STR_TXD [get_bd_intf_pins axi_fifo_mm_s/AXI_STR_TXD] [get_bd_intf_pins tx_dvb/s_axis]
   connect_bd_intf_net -intf_net axi_hp1_interconnect_M00_AXI [get_bd_intf_pins axi_hp1_interconnect/M00_AXI] [get_bd_intf_pins sys_ps7/S_AXI_HP1]
   connect_bd_intf_net -intf_net axi_hp2_interconnect_M00_AXI [get_bd_intf_pins axi_hp2_interconnect/M00_AXI] [get_bd_intf_pins sys_ps7/S_AXI_HP2]
   connect_bd_intf_net -intf_net axi_hp3_interconnect_M00_AXI [get_bd_intf_pins axi_hp3_interconnect/M00_AXI] [get_bd_intf_pins sys_ps7/S_AXI_HP3]
   connect_bd_intf_net -intf_net axi_iic_main_IIC [get_bd_intf_ports iic_main] [get_bd_intf_pins axi_iic_main/IIC]
+  connect_bd_intf_net -intf_net coeffs_axi_lite_1 [get_bd_intf_pins axi_cpu_interconnect/M18_AXI] [get_bd_intf_pins tx_dvb/coeffs_axi_lite]
   connect_bd_intf_net -intf_net s_axi_1 [get_bd_intf_pins axi_cpu_interconnect/M04_AXI] [get_bd_intf_pins tx_ad9371_tpl_core/s_axi]
   connect_bd_intf_net -intf_net s_axi_2 [get_bd_intf_pins axi_cpu_interconnect/M05_AXI] [get_bd_intf_pins rx_os_ad9371_tpl_core/s_axi]
   connect_bd_intf_net -intf_net s_axi_3 [get_bd_intf_pins axi_ad9371_tx_jesd/s_axi] [get_bd_intf_pins axi_cpu_interconnect/M08_AXI]
   connect_bd_intf_net -intf_net s_axi_4 [get_bd_intf_pins axi_ad9371_rx_jesd/s_axi] [get_bd_intf_pins axi_cpu_interconnect/M12_AXI]
   connect_bd_intf_net -intf_net s_axi_5 [get_bd_intf_pins axi_ad9371_rx_os_jesd/s_axi] [get_bd_intf_pins axi_cpu_interconnect/M16_AXI]
+  connect_bd_intf_net -intf_net s_axi_lite_1_1 [get_bd_intf_pins axi_cpu_interconnect/M19_AXI] [get_bd_intf_pins tx_dvb/s_axi_lite_1]
   connect_bd_intf_net -intf_net sys_ps7_DDR [get_bd_intf_ports ddr] [get_bd_intf_pins sys_ps7/DDR]
   connect_bd_intf_net -intf_net sys_ps7_FIXED_IO [get_bd_intf_ports fixed_io] [get_bd_intf_pins sys_ps7/FIXED_IO]
   connect_bd_intf_net -intf_net tx_data_1 [get_bd_intf_pins axi_ad9371_tx_jesd/tx_data] [get_bd_intf_pins tx_ad9371_tpl_core/link]
@@ -2540,20 +2426,19 @@ proc create_root_design { parentCell } {
   connect_bd_intf_net -intf_net util_ad9371_xcvr_rx_3 [get_bd_intf_pins axi_ad9371_rx_os_jesd/rx_phy1] [get_bd_intf_pins util_ad9371_xcvr/rx_3]
 
   # Create port connections
-  connect_bd_net -net GND_1_dout [get_bd_pins GND_1/dout] [get_bd_pins sys_concat_intc/In0] [get_bd_pins sys_concat_intc/In1] [get_bd_pins sys_concat_intc/In2] [get_bd_pins sys_concat_intc/In3] [get_bd_pins sys_concat_intc/In4] [get_bd_pins sys_concat_intc/In5] [get_bd_pins sys_concat_intc/In6] [get_bd_pins sys_concat_intc/In7] [get_bd_pins tx_fir_interpolator/load_config]
-  connect_bd_net -net GND_32_dout [get_bd_pins GND_32/dout] [get_bd_pins tx_fir_interpolator/pulse_width]
-  connect_bd_net -net VCC_1_dout [get_bd_pins VCC_1/dout] [get_bd_pins rx_fir_decimator/out_resetn] [get_bd_pins tx_fir_interpolator/out_resetn] [get_bd_pins util_ad9371_tx_upack/s_axis_valid]
-  connect_bd_net -net active_1 [get_bd_ports dac_fir_filter_active] [get_bd_pins tx_fir_interpolator/active]
+  connect_bd_net -net GND_1_dout [get_bd_pins GND_1/dout] [get_bd_pins sys_concat_intc/In0] [get_bd_pins sys_concat_intc/In1] [get_bd_pins sys_concat_intc/In2] [get_bd_pins sys_concat_intc/In3] [get_bd_pins sys_concat_intc/In4] [get_bd_pins sys_concat_intc/In5] [get_bd_pins sys_concat_intc/In6] [get_bd_pins sys_concat_intc/In7] [get_bd_pins tx_dvb/load_config]
+  connect_bd_net -net GND_32_dout [get_bd_pins GND_32/dout] [get_bd_pins tx_dvb/pulse_width]
+  connect_bd_net -net VCC_1_dout [get_bd_pins VCC_1/dout] [get_bd_pins rx_fir_decimator/out_resetn]
+  connect_bd_net -net active_1 [get_bd_ports dac_fir_filter_active] [get_bd_pins tx_dvb/active]
   connect_bd_net -net active_2 [get_bd_ports adc_fir_filter_active] [get_bd_pins rx_fir_decimator/active]
   connect_bd_net -net ad9371_rx_device_clk [get_bd_pins ad9371_rx_device_clk_rstgen/slowest_sync_clk] [get_bd_pins axi_ad9371_rx_clkgen/clk_0] [get_bd_pins axi_ad9371_rx_dma/fifo_wr_clk] [get_bd_pins axi_ad9371_rx_jesd/device_clk] [get_bd_pins axi_ad9371_rx_jesd/link_clk] [get_bd_pins rx_ad9371_tpl_core/link_clk] [get_bd_pins rx_fir_decimator/aclk] [get_bd_pins util_ad9371_rx_cpack/clk] [get_bd_pins util_ad9371_xcvr/rx_clk_0] [get_bd_pins util_ad9371_xcvr/rx_clk_1]
   connect_bd_net -net ad9371_rx_device_clk_rstgen_peripheral_reset [get_bd_pins ad9371_rx_device_clk_rstgen/peripheral_reset] [get_bd_pins util_ad9371_rx_cpack/reset]
   connect_bd_net -net ad9371_rx_os_device_clk [get_bd_pins ad9371_rx_os_device_clk_rstgen/slowest_sync_clk] [get_bd_pins axi_ad9371_rx_os_clkgen/clk_0] [get_bd_pins axi_ad9371_rx_os_dma/fifo_wr_clk] [get_bd_pins axi_ad9371_rx_os_jesd/device_clk] [get_bd_pins axi_ad9371_rx_os_jesd/link_clk] [get_bd_pins rx_os_ad9371_tpl_core/link_clk] [get_bd_pins util_ad9371_rx_os_cpack/clk] [get_bd_pins util_ad9371_xcvr/rx_clk_2] [get_bd_pins util_ad9371_xcvr/rx_clk_3]
   connect_bd_net -net ad9371_rx_os_device_clk_rstgen_peripheral_reset [get_bd_pins ad9371_rx_os_device_clk_rstgen/peripheral_reset] [get_bd_pins util_ad9371_rx_os_cpack/reset]
-  connect_bd_net -net ad9371_tx_device_clk [get_bd_pins ad9371_tx_device_clk_rstgen/slowest_sync_clk] [get_bd_pins axi_ad9371_dacfifo/dac_clk] [get_bd_pins axi_ad9371_tx_clkgen/clk_0] [get_bd_pins axi_ad9371_tx_jesd/device_clk] [get_bd_pins axi_ad9371_tx_jesd/link_clk] [get_bd_pins tx_ad9371_tpl_core/link_clk] [get_bd_pins tx_fir_interpolator/aclk] [get_bd_pins util_ad9371_tx_upack/clk] [get_bd_pins util_ad9371_xcvr/tx_clk_0] [get_bd_pins util_ad9371_xcvr/tx_clk_1] [get_bd_pins util_ad9371_xcvr/tx_clk_2] [get_bd_pins util_ad9371_xcvr/tx_clk_3]
-  connect_bd_net -net ad9371_tx_device_clk_rstgen_peripheral_reset [get_bd_pins ad9371_tx_device_clk_rstgen/peripheral_reset] [get_bd_pins axi_ad9371_dacfifo/dac_rst] [get_bd_pins util_ad9371_tx_upack/reset]
+  connect_bd_net -net ad9371_tx_device_clk [get_bd_pins ad9371_tx_device_clk_rstgen/slowest_sync_clk] [get_bd_pins axi_ad9371_dacfifo/dac_clk] [get_bd_pins axi_ad9371_tx_clkgen/clk_0] [get_bd_pins axi_ad9371_tx_jesd/device_clk] [get_bd_pins axi_ad9371_tx_jesd/link_clk] [get_bd_pins tx_ad9371_tpl_core/link_clk] [get_bd_pins util_ad9371_xcvr/tx_clk_0] [get_bd_pins util_ad9371_xcvr/tx_clk_1] [get_bd_pins util_ad9371_xcvr/tx_clk_2] [get_bd_pins util_ad9371_xcvr/tx_clk_3]
+  connect_bd_net -net ad9371_tx_device_clk_rstgen_peripheral_reset [get_bd_pins ad9371_tx_device_clk_rstgen/peripheral_reset] [get_bd_pins axi_ad9371_dacfifo/dac_rst]
   connect_bd_net -net adc_dovf_1 [get_bd_pins rx_ad9371_tpl_core/adc_dovf] [get_bd_pins util_ad9371_rx_cpack/fifo_wr_overflow]
   connect_bd_net -net adc_dovf_2 [get_bd_pins rx_os_ad9371_tpl_core/adc_dovf] [get_bd_pins util_ad9371_rx_os_cpack/fifo_wr_overflow]
-  connect_bd_net -net axi_ad9371_dacfifo_dac_data [get_bd_pins axi_ad9371_dacfifo/dac_data] [get_bd_pins util_ad9371_tx_upack/s_axis_data]
   connect_bd_net -net axi_ad9371_dacfifo_dac_dunf [get_bd_pins axi_ad9371_dacfifo/dac_dunf] [get_bd_pins tx_ad9371_tpl_core/dac_dunf]
   connect_bd_net -net axi_ad9371_dacfifo_dma_ready [get_bd_pins axi_ad9371_dacfifo/dma_ready] [get_bd_pins axi_ad9371_tx_dma/m_axis_ready]
   connect_bd_net -net axi_ad9371_rx_dma_irq [get_bd_pins axi_ad9371_rx_dma/irq] [get_bd_pins sys_concat_intc/In13]
@@ -2580,7 +2465,7 @@ proc create_root_design { parentCell } {
   connect_bd_net -net axi_ad9371_tx_jesd_irq [get_bd_pins axi_ad9371_tx_jesd/irq] [get_bd_pins sys_concat_intc/In9]
   connect_bd_net -net axi_ad9371_tx_xcvr_up_pll_rst [get_bd_pins axi_ad9371_tx_xcvr/up_pll_rst] [get_bd_pins util_ad9371_xcvr/up_qpll_rst_0]
   connect_bd_net -net axi_iic_main_iic2intc_irpt [get_bd_pins axi_iic_main/iic2intc_irpt] [get_bd_pins sys_concat_intc/In14]
-  connect_bd_net -net axi_rstgen_peripheral_aresetn [get_bd_pins axi_ad9371_dacfifo/axi_resetn] [get_bd_pins axi_rstgen/peripheral_aresetn]
+  connect_bd_net -net axi_rstgen_peripheral_aresetn [get_bd_pins axi_ad9371_dacfifo/axi_resetn] [get_bd_pins axi_ad9371_dacfifo_axi_periph/ARESETN] [get_bd_pins axi_ad9371_dacfifo_axi_periph/M00_ARESETN] [get_bd_pins axi_ad9371_dacfifo_axi_periph/S00_ARESETN] [get_bd_pins axi_fifo_mm_s/s_axi_aresetn] [get_bd_pins axi_rstgen/peripheral_aresetn] [get_bd_pins tx_dvb/s_axis_aresetn]
   connect_bd_net -net axi_sysid_0_rom_addr [get_bd_pins axi_sysid_0/rom_addr] [get_bd_pins rom_sys_0/rom_addr]
   connect_bd_net -net dac_fifo_bypass_1 [get_bd_ports dac_fifo_bypass] [get_bd_pins axi_ad9371_dacfifo/bypass]
   connect_bd_net -net gpio_i_1 [get_bd_ports gpio_i] [get_bd_pins sys_ps7/GPIO_I]
@@ -2630,13 +2515,13 @@ proc create_root_design { parentCell } {
   connect_bd_net -net spi1_sdi_i_1 [get_bd_ports spi1_sdi_i] [get_bd_pins sys_ps7/SPI1_MISO_I]
   connect_bd_net -net spi1_sdo_i_1 [get_bd_ports spi1_sdo_i] [get_bd_pins sys_ps7/SPI1_MOSI_I]
   connect_bd_net -net sync_1 [get_bd_ports tx_sync_0] [get_bd_pins axi_ad9371_tx_jesd/sync]
-  connect_bd_net -net sys_200m_clk [get_bd_pins axi_ad9371_dacfifo/axi_clk] [get_bd_pins axi_ad9371_dacfifo/dma_clk] [get_bd_pins axi_ad9371_rx_dma/m_dest_axi_aclk] [get_bd_pins axi_ad9371_rx_os_dma/m_dest_axi_aclk] [get_bd_pins axi_ad9371_tx_dma/m_axis_aclk] [get_bd_pins axi_ad9371_tx_dma/m_src_axi_aclk] [get_bd_pins axi_hp1_interconnect/aclk] [get_bd_pins axi_hp2_interconnect/aclk] [get_bd_pins axi_rstgen/slowest_sync_clk] [get_bd_pins sys_200m_rstgen/slowest_sync_clk] [get_bd_pins sys_ps7/FCLK_CLK1] [get_bd_pins sys_ps7/S_AXI_HP1_ACLK] [get_bd_pins sys_ps7/S_AXI_HP2_ACLK]
+  connect_bd_net -net sys_200m_clk [get_bd_pins axi_ad9371_dacfifo/axi_clk] [get_bd_pins axi_ad9371_dacfifo/dma_clk] [get_bd_pins axi_ad9371_dacfifo_axi_periph/ACLK] [get_bd_pins axi_ad9371_dacfifo_axi_periph/M00_ACLK] [get_bd_pins axi_ad9371_dacfifo_axi_periph/S00_ACLK] [get_bd_pins axi_ad9371_rx_dma/m_dest_axi_aclk] [get_bd_pins axi_ad9371_rx_os_dma/m_dest_axi_aclk] [get_bd_pins axi_ad9371_tx_dma/m_axis_aclk] [get_bd_pins axi_ad9371_tx_dma/m_src_axi_aclk] [get_bd_pins axi_fifo_mm_s/s_axi_aclk] [get_bd_pins axi_hp1_interconnect/aclk] [get_bd_pins axi_hp2_interconnect/aclk] [get_bd_pins axi_rstgen/slowest_sync_clk] [get_bd_pins sys_200m_rstgen/slowest_sync_clk] [get_bd_pins sys_ps7/FCLK_CLK1] [get_bd_pins sys_ps7/S_AXI_HP1_ACLK] [get_bd_pins sys_ps7/S_AXI_HP2_ACLK] [get_bd_pins tx_dvb/s_axis_aclk]
   connect_bd_net -net sys_200m_reset [get_bd_pins axi_ad9371_dacfifo/dma_rst] [get_bd_pins sys_200m_rstgen/peripheral_reset]
   connect_bd_net -net sys_200m_resetn [get_bd_pins axi_ad9371_rx_dma/m_dest_axi_aresetn] [get_bd_pins axi_ad9371_rx_os_dma/m_dest_axi_aresetn] [get_bd_pins axi_ad9371_tx_dma/m_src_axi_aresetn] [get_bd_pins axi_hp1_interconnect/aresetn] [get_bd_pins axi_hp2_interconnect/aresetn] [get_bd_pins sys_200m_rstgen/peripheral_aresetn]
   connect_bd_net -net sys_concat_intc_dout [get_bd_pins sys_concat_intc/dout] [get_bd_pins sys_ps7/IRQ_F2P]
-  connect_bd_net -net sys_cpu_clk [get_bd_pins axi_ad9371_rx_clkgen/s_axi_aclk] [get_bd_pins axi_ad9371_rx_dma/s_axi_aclk] [get_bd_pins axi_ad9371_rx_jesd/s_axi_aclk] [get_bd_pins axi_ad9371_rx_os_clkgen/s_axi_aclk] [get_bd_pins axi_ad9371_rx_os_dma/s_axi_aclk] [get_bd_pins axi_ad9371_rx_os_jesd/s_axi_aclk] [get_bd_pins axi_ad9371_rx_os_xcvr/s_axi_aclk] [get_bd_pins axi_ad9371_rx_xcvr/s_axi_aclk] [get_bd_pins axi_ad9371_tx_clkgen/s_axi_aclk] [get_bd_pins axi_ad9371_tx_dma/s_axi_aclk] [get_bd_pins axi_ad9371_tx_jesd/s_axi_aclk] [get_bd_pins axi_ad9371_tx_xcvr/s_axi_aclk] [get_bd_pins axi_cpu_interconnect/ACLK] [get_bd_pins axi_cpu_interconnect/M00_ACLK] [get_bd_pins axi_cpu_interconnect/M01_ACLK] [get_bd_pins axi_cpu_interconnect/M02_ACLK] [get_bd_pins axi_cpu_interconnect/M03_ACLK] [get_bd_pins axi_cpu_interconnect/M04_ACLK] [get_bd_pins axi_cpu_interconnect/M05_ACLK] [get_bd_pins axi_cpu_interconnect/M06_ACLK] [get_bd_pins axi_cpu_interconnect/M07_ACLK] [get_bd_pins axi_cpu_interconnect/M08_ACLK] [get_bd_pins axi_cpu_interconnect/M09_ACLK] [get_bd_pins axi_cpu_interconnect/M10_ACLK] [get_bd_pins axi_cpu_interconnect/M11_ACLK] [get_bd_pins axi_cpu_interconnect/M12_ACLK] [get_bd_pins axi_cpu_interconnect/M13_ACLK] [get_bd_pins axi_cpu_interconnect/M14_ACLK] [get_bd_pins axi_cpu_interconnect/M15_ACLK] [get_bd_pins axi_cpu_interconnect/M16_ACLK] [get_bd_pins axi_cpu_interconnect/M17_ACLK] [get_bd_pins axi_cpu_interconnect/M18_ACLK] [get_bd_pins axi_cpu_interconnect/M19_ACLK] [get_bd_pins axi_cpu_interconnect/S00_ACLK] [get_bd_pins axi_hp3_interconnect/aclk] [get_bd_pins axi_iic_main/s_axi_aclk] [get_bd_pins axi_sysid_0/s_axi_aclk] [get_bd_pins rom_sys_0/clk] [get_bd_pins rx_ad9371_tpl_core/s_axi_aclk] [get_bd_pins rx_os_ad9371_tpl_core/s_axi_aclk] [get_bd_pins sys_ps7/DMA0_ACLK] [get_bd_pins sys_ps7/FCLK_CLK0] [get_bd_pins sys_ps7/M_AXI_GP0_ACLK] [get_bd_pins sys_ps7/S_AXI_HP0_ACLK] [get_bd_pins sys_ps7/S_AXI_HP3_ACLK] [get_bd_pins sys_rstgen/slowest_sync_clk] [get_bd_pins tx_ad9371_tpl_core/s_axi_aclk] [get_bd_pins util_ad9371_xcvr/up_clk]
+  connect_bd_net -net sys_cpu_clk [get_bd_pins axi_ad9371_rx_clkgen/s_axi_aclk] [get_bd_pins axi_ad9371_rx_dma/s_axi_aclk] [get_bd_pins axi_ad9371_rx_jesd/s_axi_aclk] [get_bd_pins axi_ad9371_rx_os_clkgen/s_axi_aclk] [get_bd_pins axi_ad9371_rx_os_dma/s_axi_aclk] [get_bd_pins axi_ad9371_rx_os_jesd/s_axi_aclk] [get_bd_pins axi_ad9371_rx_os_xcvr/s_axi_aclk] [get_bd_pins axi_ad9371_rx_xcvr/s_axi_aclk] [get_bd_pins axi_ad9371_tx_clkgen/s_axi_aclk] [get_bd_pins axi_ad9371_tx_dma/s_axi_aclk] [get_bd_pins axi_ad9371_tx_jesd/s_axi_aclk] [get_bd_pins axi_ad9371_tx_xcvr/s_axi_aclk] [get_bd_pins axi_cpu_interconnect/ACLK] [get_bd_pins axi_cpu_interconnect/M00_ACLK] [get_bd_pins axi_cpu_interconnect/M01_ACLK] [get_bd_pins axi_cpu_interconnect/M02_ACLK] [get_bd_pins axi_cpu_interconnect/M03_ACLK] [get_bd_pins axi_cpu_interconnect/M04_ACLK] [get_bd_pins axi_cpu_interconnect/M05_ACLK] [get_bd_pins axi_cpu_interconnect/M06_ACLK] [get_bd_pins axi_cpu_interconnect/M07_ACLK] [get_bd_pins axi_cpu_interconnect/M08_ACLK] [get_bd_pins axi_cpu_interconnect/M09_ACLK] [get_bd_pins axi_cpu_interconnect/M10_ACLK] [get_bd_pins axi_cpu_interconnect/M11_ACLK] [get_bd_pins axi_cpu_interconnect/M12_ACLK] [get_bd_pins axi_cpu_interconnect/M13_ACLK] [get_bd_pins axi_cpu_interconnect/M14_ACLK] [get_bd_pins axi_cpu_interconnect/M15_ACLK] [get_bd_pins axi_cpu_interconnect/M16_ACLK] [get_bd_pins axi_cpu_interconnect/M17_ACLK] [get_bd_pins axi_cpu_interconnect/M18_ACLK] [get_bd_pins axi_cpu_interconnect/M19_ACLK] [get_bd_pins axi_cpu_interconnect/S00_ACLK] [get_bd_pins axi_hp3_interconnect/aclk] [get_bd_pins axi_iic_main/s_axi_aclk] [get_bd_pins axi_sysid_0/s_axi_aclk] [get_bd_pins rom_sys_0/clk] [get_bd_pins rx_ad9371_tpl_core/s_axi_aclk] [get_bd_pins rx_os_ad9371_tpl_core/s_axi_aclk] [get_bd_pins sys_ps7/DMA0_ACLK] [get_bd_pins sys_ps7/FCLK_CLK0] [get_bd_pins sys_ps7/M_AXI_GP0_ACLK] [get_bd_pins sys_ps7/S_AXI_HP0_ACLK] [get_bd_pins sys_ps7/S_AXI_HP3_ACLK] [get_bd_pins sys_rstgen/slowest_sync_clk] [get_bd_pins tx_ad9371_tpl_core/s_axi_aclk] [get_bd_pins tx_dvb/aclk] [get_bd_pins util_ad9371_xcvr/up_clk]
   connect_bd_net -net sys_cpu_reset [get_bd_pins sys_rstgen/peripheral_reset]
-  connect_bd_net -net sys_cpu_resetn [get_bd_pins ad9371_rx_device_clk_rstgen/ext_reset_in] [get_bd_pins ad9371_rx_os_device_clk_rstgen/ext_reset_in] [get_bd_pins ad9371_tx_device_clk_rstgen/ext_reset_in] [get_bd_pins axi_ad9371_rx_clkgen/s_axi_aresetn] [get_bd_pins axi_ad9371_rx_dma/s_axi_aresetn] [get_bd_pins axi_ad9371_rx_jesd/s_axi_aresetn] [get_bd_pins axi_ad9371_rx_os_clkgen/s_axi_aresetn] [get_bd_pins axi_ad9371_rx_os_dma/s_axi_aresetn] [get_bd_pins axi_ad9371_rx_os_jesd/s_axi_aresetn] [get_bd_pins axi_ad9371_rx_os_xcvr/s_axi_aresetn] [get_bd_pins axi_ad9371_rx_xcvr/s_axi_aresetn] [get_bd_pins axi_ad9371_tx_clkgen/s_axi_aresetn] [get_bd_pins axi_ad9371_tx_dma/s_axi_aresetn] [get_bd_pins axi_ad9371_tx_jesd/s_axi_aresetn] [get_bd_pins axi_ad9371_tx_xcvr/s_axi_aresetn] [get_bd_pins axi_cpu_interconnect/ARESETN] [get_bd_pins axi_cpu_interconnect/M00_ARESETN] [get_bd_pins axi_cpu_interconnect/M01_ARESETN] [get_bd_pins axi_cpu_interconnect/M02_ARESETN] [get_bd_pins axi_cpu_interconnect/M03_ARESETN] [get_bd_pins axi_cpu_interconnect/M04_ARESETN] [get_bd_pins axi_cpu_interconnect/M05_ARESETN] [get_bd_pins axi_cpu_interconnect/M06_ARESETN] [get_bd_pins axi_cpu_interconnect/M07_ARESETN] [get_bd_pins axi_cpu_interconnect/M08_ARESETN] [get_bd_pins axi_cpu_interconnect/M09_ARESETN] [get_bd_pins axi_cpu_interconnect/M10_ARESETN] [get_bd_pins axi_cpu_interconnect/M11_ARESETN] [get_bd_pins axi_cpu_interconnect/M12_ARESETN] [get_bd_pins axi_cpu_interconnect/M13_ARESETN] [get_bd_pins axi_cpu_interconnect/M14_ARESETN] [get_bd_pins axi_cpu_interconnect/M15_ARESETN] [get_bd_pins axi_cpu_interconnect/M16_ARESETN] [get_bd_pins axi_cpu_interconnect/M17_ARESETN] [get_bd_pins axi_cpu_interconnect/M18_ARESETN] [get_bd_pins axi_cpu_interconnect/M19_ARESETN] [get_bd_pins axi_cpu_interconnect/S00_ARESETN] [get_bd_pins axi_hp3_interconnect/aresetn] [get_bd_pins axi_iic_main/s_axi_aresetn] [get_bd_pins axi_rstgen/ext_reset_in] [get_bd_pins axi_sysid_0/s_axi_aresetn] [get_bd_pins rx_ad9371_tpl_core/s_axi_aresetn] [get_bd_pins rx_os_ad9371_tpl_core/s_axi_aresetn] [get_bd_pins sys_rstgen/peripheral_aresetn] [get_bd_pins tx_ad9371_tpl_core/s_axi_aresetn] [get_bd_pins util_ad9371_xcvr/up_rstn]
+  connect_bd_net -net sys_cpu_resetn [get_bd_pins ad9371_rx_device_clk_rstgen/ext_reset_in] [get_bd_pins ad9371_rx_os_device_clk_rstgen/ext_reset_in] [get_bd_pins ad9371_tx_device_clk_rstgen/ext_reset_in] [get_bd_pins axi_ad9371_rx_clkgen/s_axi_aresetn] [get_bd_pins axi_ad9371_rx_dma/s_axi_aresetn] [get_bd_pins axi_ad9371_rx_jesd/s_axi_aresetn] [get_bd_pins axi_ad9371_rx_os_clkgen/s_axi_aresetn] [get_bd_pins axi_ad9371_rx_os_dma/s_axi_aresetn] [get_bd_pins axi_ad9371_rx_os_jesd/s_axi_aresetn] [get_bd_pins axi_ad9371_rx_os_xcvr/s_axi_aresetn] [get_bd_pins axi_ad9371_rx_xcvr/s_axi_aresetn] [get_bd_pins axi_ad9371_tx_clkgen/s_axi_aresetn] [get_bd_pins axi_ad9371_tx_dma/s_axi_aresetn] [get_bd_pins axi_ad9371_tx_jesd/s_axi_aresetn] [get_bd_pins axi_ad9371_tx_xcvr/s_axi_aresetn] [get_bd_pins axi_cpu_interconnect/ARESETN] [get_bd_pins axi_cpu_interconnect/M00_ARESETN] [get_bd_pins axi_cpu_interconnect/M01_ARESETN] [get_bd_pins axi_cpu_interconnect/M02_ARESETN] [get_bd_pins axi_cpu_interconnect/M03_ARESETN] [get_bd_pins axi_cpu_interconnect/M04_ARESETN] [get_bd_pins axi_cpu_interconnect/M05_ARESETN] [get_bd_pins axi_cpu_interconnect/M06_ARESETN] [get_bd_pins axi_cpu_interconnect/M07_ARESETN] [get_bd_pins axi_cpu_interconnect/M08_ARESETN] [get_bd_pins axi_cpu_interconnect/M09_ARESETN] [get_bd_pins axi_cpu_interconnect/M10_ARESETN] [get_bd_pins axi_cpu_interconnect/M11_ARESETN] [get_bd_pins axi_cpu_interconnect/M12_ARESETN] [get_bd_pins axi_cpu_interconnect/M13_ARESETN] [get_bd_pins axi_cpu_interconnect/M14_ARESETN] [get_bd_pins axi_cpu_interconnect/M15_ARESETN] [get_bd_pins axi_cpu_interconnect/M16_ARESETN] [get_bd_pins axi_cpu_interconnect/M17_ARESETN] [get_bd_pins axi_cpu_interconnect/M18_ARESETN] [get_bd_pins axi_cpu_interconnect/M19_ARESETN] [get_bd_pins axi_cpu_interconnect/S00_ARESETN] [get_bd_pins axi_hp3_interconnect/aresetn] [get_bd_pins axi_iic_main/s_axi_aresetn] [get_bd_pins axi_rstgen/ext_reset_in] [get_bd_pins axi_sysid_0/s_axi_aresetn] [get_bd_pins rx_ad9371_tpl_core/s_axi_aresetn] [get_bd_pins rx_os_ad9371_tpl_core/s_axi_aresetn] [get_bd_pins sys_rstgen/peripheral_aresetn] [get_bd_pins tx_ad9371_tpl_core/s_axi_aresetn] [get_bd_pins tx_dvb/out_resetn] [get_bd_pins util_ad9371_xcvr/up_rstn]
   connect_bd_net -net sys_ps7_FCLK_RESET0_N [get_bd_pins sys_ps7/FCLK_RESET0_N] [get_bd_pins sys_rstgen/ext_reset_in]
   connect_bd_net -net sys_ps7_FCLK_RESET1_N [get_bd_pins sys_200m_rstgen/ext_reset_in] [get_bd_pins sys_ps7/FCLK_RESET1_N]
   connect_bd_net -net sys_ps7_GPIO_O [get_bd_ports gpio_o] [get_bd_pins sys_ps7/GPIO_O]
@@ -2654,27 +2539,9 @@ proc create_root_design { parentCell } {
   connect_bd_net -net sysref_1 [get_bd_ports tx_sysref_0] [get_bd_pins axi_ad9371_tx_jesd/sysref]
   connect_bd_net -net sysref_2 [get_bd_ports rx_sysref_0] [get_bd_pins axi_ad9371_rx_jesd/sysref]
   connect_bd_net -net sysref_3 [get_bd_ports rx_sysref_2] [get_bd_pins axi_ad9371_rx_os_jesd/sysref]
-  connect_bd_net -net tx_ad9371_tpl_core_dac_enable_0 [get_bd_pins tx_ad9371_tpl_core/dac_enable_0] [get_bd_pins tx_fir_interpolator/dac_enable_0]
-  connect_bd_net -net tx_ad9371_tpl_core_dac_enable_1 [get_bd_pins tx_ad9371_tpl_core/dac_enable_1] [get_bd_pins tx_fir_interpolator/dac_enable_1]
-  connect_bd_net -net tx_ad9371_tpl_core_dac_enable_2 [get_bd_pins tx_ad9371_tpl_core/dac_enable_2] [get_bd_pins tx_fir_interpolator/dac_enable_2]
-  connect_bd_net -net tx_ad9371_tpl_core_dac_enable_3 [get_bd_pins tx_ad9371_tpl_core/dac_enable_3] [get_bd_pins tx_fir_interpolator/dac_enable_3]
-  connect_bd_net -net tx_ad9371_tpl_core_dac_valid_0 [get_bd_pins tx_ad9371_tpl_core/dac_valid_0] [get_bd_pins tx_fir_interpolator/dac_valid_0]
-  connect_bd_net -net tx_ad9371_tpl_core_dac_valid_1 [get_bd_pins tx_ad9371_tpl_core/dac_valid_1] [get_bd_pins tx_fir_interpolator/dac_valid_1]
-  connect_bd_net -net tx_ad9371_tpl_core_dac_valid_2 [get_bd_pins tx_ad9371_tpl_core/dac_valid_2] [get_bd_pins tx_fir_interpolator/dac_valid_2]
-  connect_bd_net -net tx_ad9371_tpl_core_dac_valid_3 [get_bd_pins tx_ad9371_tpl_core/dac_valid_3] [get_bd_pins tx_fir_interpolator/dac_valid_3]
-  connect_bd_net -net tx_fir_interpolator_data_out_0 [get_bd_pins tx_ad9371_tpl_core/dac_data_0] [get_bd_pins tx_fir_interpolator/data_out_0]
-  connect_bd_net -net tx_fir_interpolator_data_out_1 [get_bd_pins tx_ad9371_tpl_core/dac_data_1] [get_bd_pins tx_fir_interpolator/data_out_1]
-  connect_bd_net -net tx_fir_interpolator_data_out_2 [get_bd_pins tx_ad9371_tpl_core/dac_data_2] [get_bd_pins tx_fir_interpolator/data_out_2]
-  connect_bd_net -net tx_fir_interpolator_data_out_3 [get_bd_pins tx_ad9371_tpl_core/dac_data_3] [get_bd_pins tx_fir_interpolator/data_out_3]
-  connect_bd_net -net tx_fir_interpolator_enable_out_0 [get_bd_pins tx_fir_interpolator/enable_out_0] [get_bd_pins util_ad9371_tx_upack/enable_0]
-  connect_bd_net -net tx_fir_interpolator_enable_out_1 [get_bd_pins tx_fir_interpolator/enable_out_1] [get_bd_pins util_ad9371_tx_upack/enable_1]
-  connect_bd_net -net tx_fir_interpolator_enable_out_2 [get_bd_pins tx_fir_interpolator/enable_out_2] [get_bd_pins util_ad9371_tx_upack/enable_2]
-  connect_bd_net -net tx_fir_interpolator_enable_out_3 [get_bd_pins tx_fir_interpolator/enable_out_3] [get_bd_pins util_ad9371_tx_upack/enable_3]
-  connect_bd_net -net tx_fir_interpolator_s_axis_tready [get_bd_pins tx_fir_interpolator/s_axis_tready] [get_bd_pins util_ad9371_tx_upack/fifo_rd_en]
+  connect_bd_net -net tx_dvb_data_out_0 [get_bd_pins tx_ad9371_tpl_core/dac_data_0] [get_bd_pins tx_dvb/data_out_0]
+  connect_bd_net -net tx_dvb_data_out_1 [get_bd_pins tx_ad9371_tpl_core/dac_data_1] [get_bd_pins tx_dvb/data_out_1]
   connect_bd_net -net tx_ref_clk_0_1 [get_bd_ports tx_ref_clk_0] [get_bd_pins util_ad9371_xcvr/qpll_ref_clk_0]
-  connect_bd_net -net util_ad9371_tx_upack_fifo_rd_data_0 [get_bd_pins tx_fir_interpolator/s_axis_tdata] [get_bd_pins util_ad9371_tx_upack/fifo_rd_data_0]
-  connect_bd_net -net util_ad9371_tx_upack_fifo_rd_valid [get_bd_pins tx_fir_interpolator/s_axis_tvalid] [get_bd_pins util_ad9371_tx_upack/fifo_rd_valid]
-  connect_bd_net -net util_ad9371_tx_upack_s_axis_ready [get_bd_pins axi_ad9371_dacfifo/dac_valid] [get_bd_pins util_ad9371_tx_upack/s_axis_ready]
   connect_bd_net -net util_ad9371_xcvr_rx_out_clk_0 [get_bd_pins axi_ad9371_rx_clkgen/clk] [get_bd_pins util_ad9371_xcvr/rx_out_clk_0]
   connect_bd_net -net util_ad9371_xcvr_rx_out_clk_2 [get_bd_pins axi_ad9371_rx_os_clkgen/clk] [get_bd_pins util_ad9371_xcvr/rx_out_clk_2]
   connect_bd_net -net util_ad9371_xcvr_tx_0_n [get_bd_ports tx_data_0_n] [get_bd_pins util_ad9371_xcvr/tx_0_n]
@@ -2688,6 +2555,7 @@ proc create_root_design { parentCell } {
   connect_bd_net -net util_ad9371_xcvr_tx_out_clk_0 [get_bd_pins axi_ad9371_tx_clkgen/clk] [get_bd_pins util_ad9371_xcvr/tx_out_clk_0]
 
   # Create address segments
+  assign_bd_address -offset 0x44A00000 -range 0x00010000 -target_address_space [get_bd_addr_spaces axi_ad9371_dacfifo/axi] [get_bd_addr_segs axi_fifo_mm_s/S_AXI/Mem0] -force
   assign_bd_address -offset 0x00000000 -range 0x40000000 -target_address_space [get_bd_addr_spaces axi_ad9371_rx_dma/m_dest_axi] [get_bd_addr_segs sys_ps7/S_AXI_HP2/HP2_DDR_LOWOCM] -force
   assign_bd_address -offset 0x00000000 -range 0x40000000 -target_address_space [get_bd_addr_spaces axi_ad9371_rx_os_dma/m_dest_axi] [get_bd_addr_segs sys_ps7/S_AXI_HP2/HP2_DDR_LOWOCM] -force
   assign_bd_address -offset 0x00000000 -range 0x40000000 -target_address_space [get_bd_addr_spaces axi_ad9371_rx_os_xcvr/m_axi] [get_bd_addr_segs sys_ps7/S_AXI_HP3/HP3_DDR_LOWOCM] -force
@@ -2707,8 +2575,8 @@ proc create_root_design { parentCell } {
   assign_bd_address -offset 0x41600000 -range 0x00001000 -target_address_space [get_bd_addr_spaces sys_ps7/Data] [get_bd_addr_segs axi_iic_main/S_AXI/Reg] -force
   assign_bd_address -offset 0x45000000 -range 0x00010000 -target_address_space [get_bd_addr_spaces sys_ps7/Data] [get_bd_addr_segs axi_sysid_0/s_axi/axi_lite] -force
   assign_bd_address -offset 0x44A04000 -range 0x00002000 -target_address_space [get_bd_addr_spaces sys_ps7/Data] [get_bd_addr_segs tx_ad9371_tpl_core/dac_tpl_core/s_axi/axi_lite] -force
-  assign_bd_address -offset 0x50000000 -range 0x10000000 -target_address_space [get_bd_addr_spaces sys_ps7/Data] [get_bd_addr_segs tx_fir_interpolator/dvbs2_tx_wrapper_0/coeffs_axi_lite/reg0] -force
-  assign_bd_address -offset 0x60000000 -range 0x10000000 -target_address_space [get_bd_addr_spaces sys_ps7/Data] [get_bd_addr_segs tx_fir_interpolator/dvbs2_tx_wrapper_0/s_axi_lite/reg0] -force
+  assign_bd_address -offset 0x50000000 -range 0x10000000 -target_address_space [get_bd_addr_spaces sys_ps7/Data] [get_bd_addr_segs tx_dvb/dvbs2_tx_wrapper_0/coeffs_axi_lite/reg0] -force
+  assign_bd_address -offset 0x60000000 -range 0x10000000 -target_address_space [get_bd_addr_spaces sys_ps7/Data] [get_bd_addr_segs tx_dvb/dvbs2_tx_wrapper_0/s_axi_lite/reg0] -force
   assign_bd_address -offset 0x44AA0000 -range 0x00004000 -target_address_space [get_bd_addr_spaces sys_ps7/Data] [get_bd_addr_segs axi_ad9371_rx_jesd/rx_axi/s_axi/axi_lite] -force
   assign_bd_address -offset 0x44AB0000 -range 0x00004000 -target_address_space [get_bd_addr_spaces sys_ps7/Data] [get_bd_addr_segs axi_ad9371_rx_os_jesd/rx_axi/s_axi/axi_lite] -force
   assign_bd_address -offset 0x44A90000 -range 0x00004000 -target_address_space [get_bd_addr_spaces sys_ps7/Data] [get_bd_addr_segs axi_ad9371_tx_jesd/tx_axi/s_axi/axi_lite] -force

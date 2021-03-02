@@ -67,6 +67,8 @@ entity dvbs2_tx_wrapper is
     coeffs_axi_rdata       : out std_logic_vector(31 downto 0);
     coeffs_axi_rresp       : out std_logic_vector(1 downto 0);
     -- Input data
+    s_axis_aclk            : in  std_logic;
+    s_axis_aresetn         : in  std_logic;
     s_axis_tvalid          : in  std_logic;
     s_axis_tlast           : in  std_logic;
     s_axis_tready          : out std_logic;
@@ -179,8 +181,8 @@ begin
     generic map ( DATA_WIDTH => AXIS_DATA_WIDTH )
     port map (
       -- Usual ports
-      clk                     => s_axi_aclk,
-      rst                     => rst,
+      clk                     => s_axis_aclk,
+      rst                     => s_axis_aresetn,
       -- FIXME: Replace individual status/config, bit mapper RAM and coefficients ports with
       -- a simple UPC interface, preferably non AXI4-MM as it adds a lot of unnecessary
       -- complexity to the testbench
