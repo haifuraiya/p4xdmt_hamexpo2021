@@ -194,7 +194,7 @@ begin
       sts_ldpc_fifo_empty     => user2regs.ldpc_fifo_status_ldpc_fifo_empty(0),
       sts_ldpc_fifo_full      => user2regs.ldpc_fifo_status_ldpc_fifo_full(0),
       -- Constellation mapper RAM interface
-      bit_mapper_ram_wren     => or(regs2user.bit_mapper_ram_wen),
+      bit_mapper_ram_wren     => regs2user.bit_mapper_ram_wen(3) or regs2user.bit_mapper_ram_wen(2) or regs2user.bit_mapper_ram_wen(1) or regs2user.bit_mapper_ram_wen(0),
       bit_mapper_ram_addr     => regs2user.bit_mapper_ram_addr,
       bit_mapper_ram_wdata    => regs2user.bit_mapper_ram_wdata,
       bit_mapper_ram_rdata    => user2regs.bit_mapper_ram_rdata,
