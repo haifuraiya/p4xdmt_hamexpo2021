@@ -60,7 +60,7 @@ package dvbs2_tx_wrapper_regmap_regs_pkg is
     -- User-logic ports (from user-logic to register file)
     type user2regs_t is record
         bit_mapper_ram_rdata : std_logic_vector(31 downto 0); -- read data for memory 'bit_mapper_ram'
-        ldpc_fifo_status_ldpc_fifo_entries : std_logic_vector(12 downto 0); -- value of register 'ldpc_fifo_status', field 'ldpc_fifo_entries'
+        ldpc_fifo_status_ldpc_fifo_entries : std_logic_vector(13 downto 0); -- value of register 'ldpc_fifo_status', field 'ldpc_fifo_entries'
         ldpc_fifo_status_ldpc_fifo_empty : std_logic_vector(0 downto 0); -- value of register 'ldpc_fifo_status', field 'ldpc_fifo_empty'
         ldpc_fifo_status_ldpc_fifo_full : std_logic_vector(0 downto 0); -- value of register 'ldpc_fifo_status', field 'ldpc_fifo_full'
         frames_in_transit_value : std_logic_vector(7 downto 0); -- value of register 'frames_in_transit', field 'value'
@@ -109,7 +109,7 @@ package dvbs2_tx_wrapper_regmap_regs_pkg is
     -- Field 'ldpc_fifo_status.ldpc_fifo_entries'
     constant LDPC_FIFO_STATUS_LDPC_FIFO_ENTRIES_BIT_OFFSET : natural := 0; -- bit offset of the 'ldpc_fifo_entries' field
     constant LDPC_FIFO_STATUS_LDPC_FIFO_ENTRIES_BIT_WIDTH : natural := 13; -- bit width of the 'ldpc_fifo_entries' field
-    constant LDPC_FIFO_STATUS_LDPC_FIFO_ENTRIES_RESET : std_logic_vector(12 downto 0) := std_logic_vector'("0000000000000"); -- reset value of the 'ldpc_fifo_entries' field
+    constant LDPC_FIFO_STATUS_LDPC_FIFO_ENTRIES_RESET : std_logic_vector(13 downto 0) := std_logic_vector'("0000000000000"); -- reset value of the 'ldpc_fifo_entries' field
     -- Field 'ldpc_fifo_status.ldpc_fifo_empty'
     constant LDPC_FIFO_STATUS_LDPC_FIFO_EMPTY_BIT_OFFSET : natural := 16; -- bit offset of the 'ldpc_fifo_empty' field
     constant LDPC_FIFO_STATUS_LDPC_FIFO_EMPTY_BIT_WIDTH : natural := 1; -- bit width of the 'ldpc_fifo_empty' field

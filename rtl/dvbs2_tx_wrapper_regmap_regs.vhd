@@ -92,7 +92,7 @@ architecture RTL of dvbs2_tx_wrapper_regmap_regs is
     signal s_reg_config_enable_dummy_frames_r : std_logic_vector(0 downto 0);
     signal s_reg_config_reset_polyphase_coefficients_r : std_logic_vector(0 downto 0);
     signal s_ldpc_fifo_status_strobe_r : std_logic;
-    signal s_reg_ldpc_fifo_status_ldpc_fifo_entries : std_logic_vector(12 downto 0);
+    signal s_reg_ldpc_fifo_status_ldpc_fifo_entries : std_logic_vector(13 downto 0);
     signal s_reg_ldpc_fifo_status_ldpc_fifo_empty : std_logic_vector(0 downto 0);
     signal s_reg_ldpc_fifo_status_ldpc_fifo_full : std_logic_vector(0 downto 0);
     signal s_frames_in_transit_strobe_r : std_logic;
@@ -182,7 +182,7 @@ begin
                     -- register 'ldpc_fifo_status' at address offset 0xF4 
                     if s_axi_araddr_reg_r = resize(unsigned(BASEADDR) + LDPC_FIFO_STATUS_OFFSET, AXI_ADDR_WIDTH) then
                         v_addr_hit := true;
-                        v_rdata_r(12 downto 0) := s_reg_ldpc_fifo_status_ldpc_fifo_entries;
+                        v_rdata_r(13 downto 0) := s_reg_ldpc_fifo_status_ldpc_fifo_entries;
                         v_rdata_r(16 downto 16) := s_reg_ldpc_fifo_status_ldpc_fifo_empty;
                         v_rdata_r(17 downto 17) := s_reg_ldpc_fifo_status_ldpc_fifo_full;
                         s_ldpc_fifo_status_strobe_r <= '1';
