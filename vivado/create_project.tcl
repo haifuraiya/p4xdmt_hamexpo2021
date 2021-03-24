@@ -22,6 +22,7 @@ add_files ../library/common
 read_vhdl -vhdl2008 [ glob ../dvb_fpga/rtl/bch_generated/*.vhd ]
 read_vhdl -vhdl2008 [ glob ../dvb_fpga/rtl/ldpc/*.vhd ]
 read_vhdl -vhdl2008 [ glob ../dvb_fpga/rtl/*.vhd ]
+read_vhdl -vhdl2008 [ glob ../dvb_fpga/third_party/airhdl/*.vhd ]
 read_vhdl -vhdl2008 -library str_format [ glob ../dvb_fpga/third_party/hdl_string_format/src/str_format_pkg.vhd ]
 read_vhdl -vhdl2008 -library fpga_cores [ glob ../dvb_fpga/third_party/fpga_cores/src/*.vhd ]
 read_verilog -sv [ glob ../dvb_fpga/third_party/polyphase_filter/*.v ]
