@@ -29,8 +29,9 @@ This branch contains the DMT transmit test and demonstation system. The system o
 
 - [x] All ORI West Lab PC parts ordered
 - [x] All ORI West Lab PC parts received
-- [x] ORI West Lab PC built
-- [x] ORI West Lab PC shipped 2 April 2021 (Two dead hard drives, broken glass door of case)
+- [x] ORI West Lab PC parts shipped 2 April 2021 (Two dead hard drives, broken glass door of case)
+- [x] ORI West Lab PC parts received 9 April 2021
+- [ ] ORI West Lab PC built 
 - [ ] DVB-S2X commercial gear recognized in ORI West Lab PC
 - [ ] DVB-S2X commercial gear tested in ORI West Lab PC
 - [ ] Configure commercial DVB-S2X demodulator for demo verification
